@@ -1,0 +1,27 @@
+{
+  "agents": {
+    "GraphRAG+Neptune": {
+      "id": "WN79XAAFL6",
+      "alias": "TSTALIASID",
+      "description": "GraphRAG with Neptune - Advanced knowledge graph analysis and document processing",
+      "region": "us-west-2",
+      "capabilities": ["Knowledge Graph", "Graph Analysis", "Document Processing", "Neptune DB"]
+    },
+    "Normal RAG+OpenSearch": {
+      "id": "ZUJPK3HE6I",
+      "alias": "TSTALIASID", 
+      "description": "Traditional RAG with OpenSearch - Standard document retrieval and Q&A",
+      "region": "us-west-2",
+      "capabilities": ["Document Retrieval", "Vector Search", "Q&A", "OpenSearch"]
+    },
+    "Custom Agent": {
+      "id": "",
+      "alias": "TSTALIASID",
+      "description": "Custom agent configuration - Enter your own Agent ID",
+      "region": "us-west-2",
+      "capabilities": ["Custom"]
+    }
+  },
+  "default_agent": "Normal RAG+OpenSearch",
+  "default_region": "us-west-2"
+}
