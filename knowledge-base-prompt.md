@@ -1,99 +1,68 @@
+# GraphRAG + Knowledge Base for Medical Device Assistant
 
-## GraphRAG + Knowledgebase + Neptune based 医疗器械助手
+## Project Overview
+This document outlines the implementation of a Graph-based Retrieval Augmented Generation (GraphRAG) system for creating an intelligent medical device assistant, with a focus on blood pressure monitors.
 
-## Chat PE
+## Query Examples
 
-<!-- 1. 请你把所有的血压计型号列举给我，并且精确回答他们每个型号有什么优缺点？以及我如何选择？ -->
-2. 请你把你知道的所有的血压计型号列举给我，并且精确回答他们每个型号有什么优缺点？以及如何推荐给我？ 
-3. 请你列举出所有的血压计型号，并且仔细的对比，帮我整理出他们的优缺点，以及如果在它们之中做出合适的选择？
-4. 我想要了解所有的血压计的型号，以及他们的优缺点如何? 
-5. 哪一款产品是有背光的?
-6. 哪一款是有语音功能的？还有吗？
-7. 哪些blood presure monitors 带背光，哪些又带语音功能?
-8. 请总结所有你知道的blood pressure monitors 的型号?
+The system should be able to handle queries such as:
 
-* what kind of model blood pressure monitors can you provide me?
-* what's pros and cons between them?
+1. "Please list all blood pressure monitor models and their advantages and disadvantages."
+2. "Compare all blood pressure monitor models and help me choose the right one."
+3. "Which models have backlight features?"
+4. "Which models have voice functionality?"
+5. "What are the specifications of each blood pressure monitor model?"
 
+## Agent Instructions
 
-4. ```yaml
-claude 3.7 
+The agent should:
+- Provide precise, factual answers about blood pressure monitors
+- Compare different models based on features, price, and target users
+- Make personalized recommendations based on user needs
+- Present information in a structured, easy-to-understand format
 
-请列出鱼悦牌所有可用的血压计型号，并提供以下具体信息：
+## Implementation Steps
 
-## 必须包含的内容：
-1. 每个型号的完整名称和产品代码
-2. 按类别分组（如臂式、腕式、智能联网型等）
-3. 针对每个型号提供：
-   - 核心技术特点（如测量方式、精度等）
-   - 3-5个主要优点
-   - 1-3个可能的局限性
-   - 适合的用户群体（如老年人、高血压患者、运动员等）
-   - 价格区间
+1. **Knowledge Base Creation**
+   * GraphRAG + Neptune database
+   * Vector-based RAG with OpenSearch as an alternative approach
 
-## 推荐标准：
-提供基于以下因素的产品推荐：
-- 用户年龄段和身体状况
-- 使用频率需求
-- 技术熟练程度
-- 预算范围
-- 是否需要数据同步和分析功能
+2. **Document Processing**
+   * Convert PDF documents to Markdown format for improved accuracy
+   * Process the following blood pressure monitor manuals:
+     - YE660C (with voice function)
+     - YE670D
+     - YE670E (with voice function + backlight + 360)
+     - YE690C
+     - YE8100C
+     - YE8900A (with voice function)
 
-## 回复格式：
-请使用表格或结构化列表呈现比较信息，并在末尾提供一个简短的"如何选择合适血压计"的决策指南。
+3. **Knowledge Graph Construction**
+   * Extract entities and relationships from processed documents
+   * Build a comprehensive knowledge graph in Neptune
 
-请只提供关于鱼悦牌血压计的官方确认信息，不要包含未经验证的数据或猜测。
+4. **User Interface Development**
+   * Create a Streamlit application for interacting with the agent
 
+## System Architecture
 
-
-
-## Agent instruction
-
-You are an professional customer care services agent for blook monitor, show the precise answers to customers.
-
-
-## Impelmentation 步骤
-
-1. 建立智识库 -> Knowledge-base 
-   * GraphRAG + Neptune
-   * RAG Vector + Opensearch - normal ones
-
-2. 文件转换
-使用MineU 开源工具将pdf转换为Markdown，以此来提高准确率，未来也可以做成工程化,文档放至 - s3://knowledgebase-graphrag-yuyue/markdown-data/
-2. 使用同源文档，鱼跃血压计说明书不同型号包括：
-
-   - YE660C (with voice function)
-   - YE670D
-   - YE670E
-   - YE690C
-   - YE8100C
-   - YE8900A (with voice function)
-
-* 鱼跃YE660C电子血压计(语音版)-中文说明书.pdf
-* 鱼跃YE670D电子血压计中文说明书.pdf
-* 鱼跃YE670E电子血压计中文说明书（语音+背光+360）.pdf
-* 鱼跃YE690C电子血压计-中文说明书.pdf
-* 鱼跃YE8100C电子血压计中文说明书.pdf
-* 鱼跃YE8900A电子血压计(语音款)中文说明书.pdf
-
-
-3. 开始建立Knowledgebase，和Agent
-
-4. 创建Streamlint应用，访问Agent
-
-## 架构图
-
-   
+[Architecture diagram to be added]
 
 ## Future Roadmap
-1. 多个Agent协同，
-2. 每个Agent负责特定的医疗器械类型
-3. 使用多模态Embedding 模型，增加图片搜索
 
+1. **Multi-Agent Collaboration**
+   * Develop specialized agents for different medical device categories
+   * Implement agent coordination mechanisms
 
+2. **Multimodal Capabilities**
+   * Integrate multimodal embedding models for image search
+   * Enable visual query processing
 
-### Reference link:
+3. **Enhanced Personalization**
+   * Develop user profiles for more targeted recommendations
+   * Implement feedback mechanisms for continuous improvement
 
-- https://mp.weixin.qq.com/s/z7VxAGueILkJ1ptMKWTzOA
-- (When to use Graphs in RAG: A Comprehensive
-Analysis for Graph Retrieval-Augmented Generation)[!https://arxiv.org/pdf/2506.05690]
+## References
+
+- [WeChat article on medical device assistants](https://mp.weixin.qq.com/s/z7VxAGueILkJ1ptMKWTzOA)
+- [When to use Graphs in RAG: A Comprehensive Analysis for Graph Retrieval-Augmented Generation](https://arxiv.org/pdf/2506.05690)
