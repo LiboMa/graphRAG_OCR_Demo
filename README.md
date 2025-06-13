@@ -11,22 +11,18 @@ This project demonstrates a Graph-based Retrieval Augmented Generation (GraphRAG
 
 ## Setup
 
-1. Initialize the environment:
-   ```
-   ./start_jupyter.sh
-   ```
 
-2. Download required models:
+1. Download required models:
    ```
    python download_models_hf.py
    ```
 
-3. Process PDF documents:
+2. Process PDF documents:
    ```
    python converter.py
    ```
 
-4. Launch the Streamlit client:
+3. Launch the Streamlit client:
    ```
    cd streamlint-client
    streamlit run app.py
@@ -36,7 +32,6 @@ This project demonstrates a Graph-based Retrieval Augmented Generation (GraphRAG
 
 - `converter.py`: Converts PDFs to text using OCR
 - `download_models_hf.py`: Downloads required Hugging Face models
-- `start_jupyter.sh`: Script to start Jupyter notebook environment
 - `knowledge-base-prompt.md`: Prompt templates for knowledge base interaction
 - `output/`: Directory containing processed OCR output
 - `streamlint-client/`: Streamlit web application
