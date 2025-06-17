@@ -10,8 +10,9 @@
 1. 请你把你知道的所有的血压计型号列举给我，并且精确回答他们每个型号有什么优缺点？以及如何推荐给我？ 
 2. 请你列举出所有的血压计型号，并且仔细的对比，帮我整理出他们的优缺点，以及如何在它们之中做出合适的选择？
 3. 我想要了解所有的血压计的型号，以及他们的优缺点如何? 
-4. 哪一款是有语音功能的？还有吗？
-5. 哪些blood pressure monitors 带背光，哪些又带语音功能?
+4. 哪一款产品是有背光的?
+5. 哪一款是有语音功能的？还有吗？
+6. 哪些blood pressure monitors 带背光，哪些又带语音功能?
 7. 请总结所有你知道的blood pressure monitors 的型号?
 
 英文查询示例：
@@ -113,3 +114,7 @@ Provide precise answers to customers based on official product information.
 
 - [医疗设备助手微信文章](https://mp.weixin.qq.com/s/z7VxAGueILkJ1ptMKWTzOA)
 - [When to use Graphs in RAG: A Comprehensive Analysis for Graph Retrieval-Augmented Generation](https://arxiv.org/pdf/2506.05690)
+- [LightRAG](https://github.com/HKUDS/LightRAG)
+- [ollama](https://github.com/ollama/ollama)
+- [ollama, operation](https://translucentcomputing.github.io/kubert-assistant-lite/ollama.html)
+- [OpenAI Compatiable URL](https://github.com/aws-samples/bedrock-access-gateway )
