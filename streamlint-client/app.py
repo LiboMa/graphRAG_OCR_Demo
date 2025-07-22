@@ -4,14 +4,16 @@ import os
 import uuid
 from datetime import datetime
 from state_manager import StateManager
+from auth_manager import AuthManager
 
-# Initialize state manager
+# Initialize managers
 state_manager = StateManager()
+auth_manager = AuthManager()
 
 # Set page configuration
 st.set_page_config(
-    page_title="Bedrock Agent Chat",
-    page_icon="🤖",
+    page_title="Bedrock Agent Chat - Secure",
+    page_icon="🔐",
     layout="wide"
 )
 
@@ -307,8 +309,14 @@ def render_agent_info():
             st.code(f"Region: {st.session_state.region}")
 
 def render_sidebar():
-    """Render the sidebar with session management."""
+    """Render the sidebar with session management and user info."""
     with st.sidebar:
+        # User authentication info
+        auth_manager.render_user_info()
+        
+        # Admin panel (if admin user)
+        auth_manager.render_admin_panel()
+        
         st.header("💬 Session & Status")
         
         # Combined session info and auto-check status
@@ -387,12 +395,67 @@ def render_sidebar():
                 else:
                     st.write(f"**{file_name}:** ❌ Not found")
 
+def render_security_header():
+    """Render security status in header."""
+    user = auth_manager.get_current_user()
+    if user:
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col1:
+            st.markdown(f"### 🔐 Secure Bedrock Agent Chat Interface")
+        with col2:
+            st.markdown(f"**👤 {user['name']}**")
+        with col3:
+            st.markdown(f"**🛡️ {user['role'].title()}**")
+        
+        st.markdown("*Authenticated session - Select an agent and start chatting*")
+    else:
+        st.title("🔐 Secure Bedrock Agent Chat Interface")
+
 def main():
     """Main function to run the Streamlit app."""
+    # Check authentication first
+    if not auth_manager.is_session_valid():
+        st.title("🔐 Secure Bedrock Agent Chat Interface")
+        st.markdown("---")
+        auth_manager.render_login_form()
+        
+        # Show security features
+        st.markdown("---")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("""
+            ### 🛡️ Security Features
+            - User authentication required
+            - Session timeout protection
+            - Failed attempt lockout
+            - Role-based access control
+            """)
+        
+        with col2:
+            st.markdown("""
+            ### 🚀 Chat Features
+            - Real-time agent switching
+            - Persistent chat history
+            - Agent status monitoring
+            - Session management
+            """)
+        
+        with col3:
+            st.markdown("""
+            ### ⚙️ Admin Features
+            - User management panel
+            - Add/remove users
+            - Role assignment
+            - System monitoring
+            """)
+        
+        return
+    
+    # User is authenticated, proceed with main app
     initialize_session_state()
-
-    st.title("🤖 Bedrock Agent Chat Interface")
-    st.markdown("*Select an agent and start chatting - status checked automatically*")
+    
+    render_security_header()
     
     # Auto-check on first launch
     if not st.session_state.app_initialized:
@@ -459,12 +522,21 @@ def main():
             st.session_state.messages.append({"role": "assistant", "content": response})
 
     st.markdown("---")
-    # st.markdown(
-    #     "💡 **Tips:** "
-    #     "Agent status is checked automatically • "
-    #     "Use dropdown to switch agents instantly • "
-    #     "Auto-check is always enabled for best experience"
-    # )
+    
+    # Security footer
+    user = auth_manager.get_current_user()
+    if user:
+        login_duration = datetime.now() - user['login_time']
+        hours, remainder = divmod(int(login_duration.total_seconds()), 3600)
+        minutes, _ = divmod(remainder, 60)
+        
+        st.markdown(f"""
+        <div style="text-align: center; color: #666; font-size: 0.8em;">
+        🔐 Secure session active • User: {user['name']} ({user['role']}) • 
+        Session time: {hours:02d}:{minutes:02d} • 
+        Auto-logout in {60 - minutes} minutes
+        </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

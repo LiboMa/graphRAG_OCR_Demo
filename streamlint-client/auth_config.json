@@ -1,0 +1,12 @@
+{
+  "users": {
+    "demoadmin": {
+      "password": "demo",
+      "role": "admin",
+      "name": "Administrator"
+    }
+  },
+  "session_timeout_minutes": 60,
+  "max_login_attempts": 3,
+  "lockout_duration_minutes": 15
+}
