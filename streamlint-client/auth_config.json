@@ -4,6 +4,11 @@
       "password": "demo",
       "role": "admin",
       "name": "Administrator"
+    },
+    "test2": {
+      "password": "test2",
+      "role": "admin",
+      "name": "test2"
     }
   },
   "session_timeout_minutes": 60,

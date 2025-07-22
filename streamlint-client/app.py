@@ -5,10 +5,12 @@ import uuid
 from datetime import datetime
 from state_manager import StateManager
 from auth_manager import AuthManager
+from config_loader import ConfigLoader
 
 # Initialize managers
 state_manager = StateManager()
 auth_manager = AuthManager()
+config_loader = ConfigLoader()
 
 # Set page configuration
 st.set_page_config(
@@ -17,36 +19,33 @@ st.set_page_config(
     layout="wide"
 )
 
-# Predefined Agent Configurations
-AGENT_CONFIGS = {
-    "GraphRAG+Neptune": {
-        "id": "WN79XAAFL6",
-        "alias": "TSTALIASID",
-        "description": "GraphRAG with Neptune - Advanced knowledge graph analysis and document processing",
-        "region": "us-west-2"
-    },
-    "Normal RAG+OpenSearch": {
-        "id": "ZUJPK3HE6I", 
-        "alias": "TSTALIASID",
-        "description": "Traditional RAG with OpenSearch - Standard document retrieval and Q&A",
-        "region": "us-west-2"
-    },
-    "Custom Agent": {
-        "id": "",
-        "alias": "TSTALIASID",
-        "description": "Custom agent configuration - Enter your own Agent ID",
-        "region": "us-west-2"
-    }
-}
+# Load agent configurations from JSON file
+def load_agent_configs():
+    """Load agent configurations from agent_config.json"""
+    try:
+        config = config_loader.load_config()
+        return config["agents"], config.get("default_agent", "")
+    except Exception as e:
+        st.error(f"Error loading agent configuration: {e}")
+        # Fallback to default configuration
+        return {
+            "Normal RAG+OpenSearch": {
+                "id": "ZUJPK3HE6I",
+                "alias": "TSTALIASID",
+                "description": "Traditional RAG with OpenSearch - Standard document retrieval and Q&A",
+                "region": "us-west-2",
+                "capabilities": ["Document Retrieval", "Vector Search", "Q&A", "OpenSearch"]
+            }
+        }, "Normal RAG+OpenSearch"
 
-# Default configuration
-DEFAULT_AGENT_CONFIG = "Normal RAG+OpenSearch"
+# Load configurations
+AGENT_CONFIGS, DEFAULT_AGENT_CONFIG = load_agent_configs()
 
 def initialize_session_state():
     """Initialize session state variables if they don't exist."""
     # Load saved app state if available
     saved_state = state_manager.load_app_state()
-    
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "session_id" not in st.session_state:
@@ -54,7 +53,7 @@ def initialize_session_state():
     if "selected_agent" not in st.session_state:
         # Try to load from saved state, otherwise use default
         st.session_state.selected_agent = (
-            saved_state.get("selected_agent", DEFAULT_AGENT_CONFIG) 
+            saved_state.get("selected_agent", DEFAULT_AGENT_CONFIG)
             if saved_state else DEFAULT_AGENT_CONFIG
         )
     if "agent_id" not in st.session_state:
@@ -65,7 +64,7 @@ def initialize_session_state():
         st.session_state.region = AGENT_CONFIGS[st.session_state.selected_agent]["region"]
     if "custom_agent_id" not in st.session_state:
         st.session_state.custom_agent_id = (
-            saved_state.get("custom_agent_id", "") 
+            saved_state.get("custom_agent_id", "")
             if saved_state else ""
         )
     if "agent_status" not in st.session_state:
@@ -100,7 +99,7 @@ def check_agent_status(client, agent_id, agent_alias, show_spinner=True):
     """Check if the agent is available and return status."""
     if not agent_id:
         return "❌ No Agent ID"
-    
+
     try:
         if show_spinner:
             with st.spinner("🔍 Checking agent status..."):
@@ -133,29 +132,29 @@ def check_agent_status(client, agent_id, agent_alias, show_spinner=True):
 
 def auto_check_agent_status():
     """Automatically check agent status when needed."""
-    if (st.session_state.agent_id and 
+    if (st.session_state.agent_id and
         st.session_state.agent_status in ["Unknown", "🔄 Checking..."] and
         not st.session_state.status_checking):
-        
+
         st.session_state.status_checking = True
         client = get_bedrock_client(st.session_state.region)
         if client:
             status = check_agent_status(
-                client, 
-                st.session_state.agent_id, 
+                client,
+                st.session_state.agent_id,
                 st.session_state.agent_alias,
                 show_spinner=False
             )
             st.session_state.agent_status = status
             st.session_state.last_agent_check = datetime.now()
-            
+
             # Save status to file
             state_manager.save_agent_status(
-                st.session_state.agent_id, 
-                status, 
+                st.session_state.agent_id,
+                status,
                 st.session_state.last_agent_check
             )
-            
+
         st.session_state.status_checking = False
         return True
     return False
@@ -181,13 +180,13 @@ def update_agent_configuration(selected_agent, custom_id=None):
         st.session_state.agent_id = config["id"]
         st.session_state.agent_alias = config["alias"]
         st.session_state.region = config["region"]
-    
+
     # Reset session and status when agent changes
     st.session_state.session_id = str(uuid.uuid4())
     st.session_state.agent_status = "🔄 Checking..."  # Always auto-check
     st.session_state.last_agent_check = None
     st.session_state.status_checking = False
-    
+
     # Save current state
     save_current_state()
 
@@ -220,7 +219,7 @@ def invoke_agent(client, prompt, session_id, agent_id, agent_alias):
 def render_agent_selector():
     """Render the agent selection dropdown."""
     col1, col2, col3 = st.columns([3, 1, 1])
-    
+
     with col1:
         selected_agent = st.selectbox(
             "🤖 Select Bedrock Agent:",
@@ -229,7 +228,7 @@ def render_agent_selector():
             key="agent_dropdown",
             help="Choose an agent to chat with. Status will be checked automatically."
         )
-        
+
         # Handle agent change
         if selected_agent != st.session_state.selected_agent:
             st.session_state.selected_agent = selected_agent
@@ -240,7 +239,7 @@ def render_agent_selector():
             st.success(f"✅ Switched to {selected_agent}")
             # Trigger auto-check after switch
             st.rerun()
-    
+
     with col2:
         col2a, col2b = st.columns([3, 1])
         with col2a:
@@ -256,37 +255,37 @@ def render_agent_selector():
                     client = get_bedrock_client(st.session_state.region)
                     if client:
                         status = check_agent_status(
-                            client, 
-                            st.session_state.agent_id, 
+                            client,
+                            st.session_state.agent_id,
                             st.session_state.agent_alias,
                             show_spinner=True
                         )
                         st.session_state.agent_status = status
                         st.session_state.last_agent_check = datetime.now()
-                        
+
                         # Save status to file
                         state_manager.save_agent_status(
-                            st.session_state.agent_id, 
-                            status, 
+                            st.session_state.agent_id,
+                            status,
                             st.session_state.last_agent_check
                         )
-                        
+
                     st.session_state.status_checking = False
                     st.rerun()
-    
+
     with col3:
         st.write(f"**Messages:** {len(st.session_state.messages)}")
 
 def render_agent_info():
     """Render agent information and custom input if needed."""
     current_config = AGENT_CONFIGS.get(st.session_state.selected_agent, {})
-    
+
     if current_config.get("description"):
         st.info(f"ℹ️ {current_config['description']}")
-    
+
     if st.session_state.selected_agent == "Custom Agent":
         col1, col2 = st.columns([3, 1])
-        
+
         with col1:
             custom_id = st.text_input(
                 "Enter your Agent ID:",
@@ -295,14 +294,14 @@ def render_agent_info():
                 key="custom_agent_input",
                 help="Enter the ID of your custom Bedrock agent"
             )
-            
+
             if custom_id != st.session_state.custom_agent_id:
                 st.session_state.custom_agent_id = custom_id
                 update_agent_configuration("Custom Agent", custom_id)
                 st.success("✅ Custom agent ID updated")
                 # Trigger auto-check after custom ID change
                 st.rerun()
-        
+
         with col2:
             st.write("**Current Config:**")
             st.code(f"ID: {st.session_state.agent_id or 'Not set'}")
@@ -313,12 +312,12 @@ def render_sidebar():
     with st.sidebar:
         # User authentication info
         auth_manager.render_user_info()
-        
+
         # Admin panel (if admin user)
         auth_manager.render_admin_panel()
-        
+
         st.header("💬 Session & Status")
-        
+
         # Combined session info and auto-check status
         st.subheader("📋 Current Configuration")
         config_info = {
@@ -328,23 +327,23 @@ def render_sidebar():
             "Region": st.session_state.region,
             "Status": st.session_state.agent_status
         }
-        
+
         for key, value in config_info.items():
             st.write(f"**{key}:** {value}")
-        
+
         if st.session_state.last_agent_check:
             st.caption(f"Last checked: {st.session_state.last_agent_check.strftime('%H:%M:%S')}")
-        
+
         # Auto-check status indicator (no checkbox)
         st.caption("🔄 Auto-check: Always enabled")
-        
+
         st.divider()
-        
+
         # Session controls
         st.subheader("🔧 Session Controls")
         st.write(f"**Session ID:** `{st.session_state.session_id[:8]}...`")
         st.write(f"**Messages:** {len(st.session_state.messages)}")
-        
+
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🗑️ Clear", key="clear_chat", help="Clear all messages"):
@@ -352,7 +351,7 @@ def render_sidebar():
                 st.success("Chat cleared!")
                 save_current_state()  # Save after clearing
                 st.rerun()
-        
+
         with col2:
             if st.button("🔄 New", key="new_session", help="Start new session"):
                 st.session_state.session_id = str(uuid.uuid4())
@@ -360,15 +359,15 @@ def render_sidebar():
                 st.success("New session!")
                 save_current_state()  # Save after new session
                 st.rerun()
-        
+
         st.divider()
-        
+
         # State management section
         st.subheader("💾 State Management")
-        
+
         # Show state info
         state_info = state_manager.get_state_info()
-        
+
         col1, col2 = st.columns(2)
         with col1:
             if st.button("💾 Save", key="save_state", help="Save current state"):
@@ -377,7 +376,7 @@ def render_sidebar():
                 else:
                     st.error("Failed to save state")
                 st.rerun()
-        
+
         with col2:
             if st.button("🗑️ Clear State", key="clear_state", help="Clear saved state"):
                 if state_manager.clear_state():
@@ -385,7 +384,7 @@ def render_sidebar():
                 else:
                     st.error("Failed to clear state")
                 st.rerun()
-        
+
         # Show state file info
         with st.expander("📁 State Files Info"):
             for file_name, file_info in state_info["files"].items():
@@ -406,7 +405,7 @@ def render_security_header():
             st.markdown(f"**👤 {user['name']}**")
         with col3:
             st.markdown(f"**🛡️ {user['role'].title()}**")
-        
+
         st.markdown("*Authenticated session - Select an agent and start chatting*")
     else:
         st.title("🔐 Secure Bedrock Agent Chat Interface")
@@ -418,58 +417,58 @@ def main():
         st.title("🔐 Secure Bedrock Agent Chat Interface")
         st.markdown("---")
         auth_manager.render_login_form()
-        
+
         # Show security features
-        st.markdown("---")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("""
-            ### 🛡️ Security Features
-            - User authentication required
-            - Session timeout protection
-            - Failed attempt lockout
-            - Role-based access control
-            """)
-        
-        with col2:
-            st.markdown("""
-            ### 🚀 Chat Features
-            - Real-time agent switching
-            - Persistent chat history
-            - Agent status monitoring
-            - Session management
-            """)
-        
-        with col3:
-            st.markdown("""
-            ### ⚙️ Admin Features
-            - User management panel
-            - Add/remove users
-            - Role assignment
-            - System monitoring
-            """)
-        
+       # st.markdown("---")
+       # col1, col2, col3 = st.columns(3)
+
+       # with col1:
+       #     st.markdown("""
+       #     ### 🛡️ Security Features
+       #     - User authentication required
+       #     - Session timeout protection
+       #     - Failed attempt lockout
+       #     - Role-based access control
+       #     """)
+       #
+       # with col2:
+       #     st.markdown("""
+       #     ### 🚀 Chat Features
+       #     - Real-time agent switching
+       #     - Persistent chat history
+       #     - Agent status monitoring
+       #     - Session management
+       #     """)
+       #
+       # with col3:
+       #     st.markdown("""
+       #     ### ⚙️ Admin Features
+       #     - User management panel
+       #     - Add/remove users
+       #     - Role assignment
+       #     - System monitoring
+       #     """)
+       #
         return
-    
+
     # User is authenticated, proceed with main app
     initialize_session_state()
-    
+
     render_security_header()
-    
+
     # Auto-check on first launch
     if not st.session_state.app_initialized:
         st.session_state.app_initialized = True
         st.session_state.agent_status = "🔄 Checking..."
-    
+
     # Perform auto-check if needed
     if auto_check_agent_status():
         st.rerun()
-    
+
     render_agent_selector()
     render_agent_info()
     render_sidebar()
-    
+
     st.divider()
 
     if not st.session_state.agent_id:
@@ -522,18 +521,18 @@ def main():
             st.session_state.messages.append({"role": "assistant", "content": response})
 
     st.markdown("---")
-    
+
     # Security footer
     user = auth_manager.get_current_user()
     if user:
         login_duration = datetime.now() - user['login_time']
         hours, remainder = divmod(int(login_duration.total_seconds()), 3600)
         minutes, _ = divmod(remainder, 60)
-        
+
         st.markdown(f"""
         <div style="text-align: center; color: #666; font-size: 0.8em;">
-        🔐 Secure session active • User: {user['name']} ({user['role']}) • 
-        Session time: {hours:02d}:{minutes:02d} • 
+        🔐 Secure session active • User: {user['name']} ({user['role']}) •
+        Session time: {hours:02d}:{minutes:02d} •
         Auto-logout in {60 - minutes} minutes
         </div>
         """, unsafe_allow_html=True)
